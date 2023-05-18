@@ -1,0 +1,62 @@
+import io
+import logging
+import requests
+from requests import Response
+
+logger = logging.getLogger(__name__)
+
+
+class CommonMixin():
+    def _request(self, method, path, headers={}, data=None, files=None, stream=False) -> Response:
+        url = f"{self.endpoint}{path}"
+
+        if self.xsrf_token:
+            headers['X-XSRF-TOKEN'] = self.xsrf_token
+            headers['X-Requested-With'] = 'XMLHttpRequest'
+
+        if method == "POST":
+            if 'Content-Type' not in headers.keys():
+                headers['Content-Type'] = 'application/x-www-form-urlencoded'
+
+            if files is not None:
+                headers.pop('Content-Type')
+
+            r = requests.post(url=url, cookies=self.cookies, headers=headers, data=data, files=files)
+
+        elif method == "GET":
+            r = requests.get(url=url, cookies=self.cookies, headers=headers, data=data, stream=stream)
+
+        if r.status_code == 200:
+            self.cookies = r.cookies
+            if 'X-XSRF-TOKEN' in r.headers.keys():
+                self.xsrf_token = r.headers['X-XSRF-TOKEN']
+            return r
+        else:
+            logger.error(f"HTTP Status Code: {r.status_code}")
+            for headerkey in [item for item in r.headers.keys() if item.startswith('X-Spa-Error')]:
+                logger.error(f"{headerkey}: {r.headers[headerkey]}")
+            raise
+
+    def _download(self, method, path, headers={}, data=None) -> tuple:
+        file = io.BytesIO()
+
+        r = self._request(method=method, path=path, headers=headers, data=data, stream=True)
+
+        content_type = r.headers['Content-Type']
+        content_disp = r.headers['Content-Disposition']
+        for chunk in r.iter_content(chunk_size=8192):
+            if chunk:
+                file.write(chunk)
+        file.seek(0)
+
+        return (file, content_type, content_disp)
+
+    def post(self, path, headers={}, data=None, stream=False, files=None) -> Response:
+        return self._request(method="POST", path=path, headers=headers, data=data, stream=stream, files=files)
+
+    def post_json(self, path, headers={}, data=None, stream=False, files=None) -> Response:
+        headers['Content-Type'] = 'application/json'
+        return self.post(path=path, headers=headers, data=data, stream=stream, files=files)
+
+    def get(self, path, headers={}, data=None, stream=False) -> Response:
+        return self._request(method="GET", path=path, headers=headers, data=data, stream=stream)
