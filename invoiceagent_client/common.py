@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class CommonMixin():
-    def _request(self, method, path, headers={}, data=None, files=None, stream=False) -> Response:
+    def _request(self, method, path, headers={}, data=None, files=None, json=None, stream=False) -> Response:
         url = f"{self.endpoint}{path}"
 
         if self.xsrf_token:
@@ -15,13 +15,9 @@ class CommonMixin():
             headers['X-Requested-With'] = 'XMLHttpRequest'
 
         if method == "POST":
-            if 'Content-Type' not in headers.keys():
-                headers['Content-Type'] = 'application/x-www-form-urlencoded'
-
             if files is not None:
                 headers.pop('Content-Type')
-
-            r = requests.post(url=url, cookies=self.cookies, headers=headers, data=data, files=files)
+            r = requests.post(url=url, cookies=self.cookies, headers=headers, data=data, json=json, files=files)
 
         elif method == "GET":
             r = requests.get(url=url, cookies=self.cookies, headers=headers, data=data, stream=stream)
@@ -43,7 +39,7 @@ class CommonMixin():
         r = self._request(method=method, path=path, headers=headers, data=data, stream=True)
 
         content_type = r.headers['Content-Type']
-        content_disp = r.headers['Content-Disposition']
+        content_disp = r.headers.get('Content-Disposition')
         for chunk in r.iter_content(chunk_size=8192):
             if chunk:
                 file.write(chunk)
@@ -55,8 +51,7 @@ class CommonMixin():
         return self._request(method="POST", path=path, headers=headers, data=data, stream=stream, files=files)
 
     def post_json(self, path, headers={}, data=None, stream=False, files=None) -> Response:
-        headers['Content-Type'] = 'application/json'
-        return self.post(path=path, headers=headers, data=data, stream=stream, files=files)
+        return self._request(method="POST", path=path, headers=headers, json=data, stream=stream, files=files)
 
     def get(self, path, headers={}, data=None, stream=False) -> Response:
         return self._request(method="GET", path=path, headers=headers, data=data, stream=stream)

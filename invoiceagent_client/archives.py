@@ -9,8 +9,13 @@ class Archives(CommonMixin):
         files = {
             'file': ('', file, content_type)
         }
-        if 'customProperties' not in data.keys() and custom_props:
-            data['customProperties'] = json.dumps(custom_props)
+
+        if 'customProperties' in data.keys():
+            if data['customProperties'] is tuple:
+                raise Exception("customProperties attr must be str.")
+        else:
+            if custom_props:
+                data['customProperties'] = json.dumps(custom_props)
 
         r = self.post(path=path, headers=headers, data=data, files=files)
         return r.json()
