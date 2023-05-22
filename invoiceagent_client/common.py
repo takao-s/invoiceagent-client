@@ -23,7 +23,7 @@ class CommonMixin():
             r = requests.get(url=url, cookies=self.cookies, headers=headers, data=data, stream=stream)
 
         if r.status_code == 200:
-            self.cookies = r.cookies
+            self.cookies = r.cookies if self.cookies is None else self.cookies
             if 'X-XSRF-TOKEN' in r.headers.keys():
                 self.xsrf_token = r.headers['X-XSRF-TOKEN']
             return r
