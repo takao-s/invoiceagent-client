@@ -17,5 +17,4 @@ class Archives(CommonMixin):
             if custom_props:
                 data['customProperties'] = json.dumps(custom_props)
 
-        r = self.post(path=path, headers=headers, data=data, files=files)
-        return r.json()
+        return self.post(path=path, headers=headers, data=data, files=files)

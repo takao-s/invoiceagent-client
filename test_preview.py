@@ -5,10 +5,12 @@ from invoiceagent_client import Client
 
 load_dotenv()
 
-USER = os.getenv('USER')
+USER = os.getenv('USERNAME')
 PASS = os.getenv('PASS')
 INSTANCE = os.getenv('INSTANCE')
 FILE_ID = os.getenv('FILE_ID')
+
+os.makedirs('downloads', exist_ok=True)
 
 
 class ClientTest(unittest.TestCase):
@@ -17,10 +19,10 @@ class ClientTest(unittest.TestCase):
         data = {
             'rotateType': "1"
         }
-        (f, t, d) = iv.preview_get(file_id=FILE_ID, page=2, data=data)
+        r = iv.preview_get(file_id=FILE_ID, page=2, data=data)
 
         with open('downloads/test_dl_raw.png', mode='wb') as fs:
-            fs.write(f.getvalue())
+            fs.write(r.content)
 
     def test_hightlight_get(self):
         iv = Client(user=USER, password=PASS, instance=INSTANCE)
@@ -33,5 +35,5 @@ class ClientTest(unittest.TestCase):
         }
         res = iv.highlight_get(file_id=635, page=2, data=data)
 
-        print(res)
-        self.assertIsNotNone(res)
+        print(res.json())
+        self.assertIsNotNone(res.json())

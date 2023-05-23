@@ -1,4 +1,3 @@
-import io
 import logging
 import requests
 from requests import Response
@@ -32,26 +31,6 @@ class CommonMixin():
             for headerkey in [item for item in r.headers.keys() if item.startswith('X-Spa-Error')]:
                 logger.error(f"{headerkey}: {r.headers[headerkey]}")
             raise
-
-    def _download(self, method, path, headers={}, data=None) -> tuple:
-        file = io.BytesIO()
-
-        r = self._request(method=method, path=path, headers=headers, data=data, stream=True)
-
-        if r.status_code != 200:
-            logger.error(f"HTTP Status Code: {r.status_code}")
-            for headerkey in [item for item in r.headers.keys() if item.startswith('X-Spa-Error')]:
-                logger.error(f"{headerkey}: {r.headers[headerkey]}")
-            raise
-
-        content_type = r.headers['Content-Type']
-        content_disp = r.headers.get('Content-Disposition')
-        for chunk in r.iter_content(chunk_size=8192):
-            if chunk:
-                file.write(chunk)
-        file.seek(0)
-
-        return (file, content_type, content_disp)
 
     def post(self, path, headers={}, data=None, stream=False, files=None) -> Response:
         return self._request(method="POST", path=path, headers=headers, data=data, stream=stream, files=files)

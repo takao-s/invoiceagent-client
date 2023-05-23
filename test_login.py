@@ -5,7 +5,7 @@ from invoiceagent_client import Client
 
 load_dotenv()
 
-USER = os.getenv('USER')
+USER = os.getenv('USERNAME')
 PASS = os.getenv('PASS')
 INSTANCE = os.getenv('INSTANCE')
 FILE_ID = os.getenv('FILE_ID')
