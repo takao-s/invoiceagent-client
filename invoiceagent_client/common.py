@@ -14,7 +14,7 @@ class CommonMixin():
             headers['X-Requested-With'] = 'XMLHttpRequest'
 
         if method == "POST":
-            if files is not None:
+            if files is not None and 'Content-Type' in headers.keys():
                 headers.pop('Content-Type')
             r = requests.post(url=url, cookies=self.cookies, headers=headers, data=data, json=json, files=files)
 
