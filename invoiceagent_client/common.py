@@ -25,12 +25,11 @@ class CommonMixin():
             self.cookies = r.cookies if self.cookies is None else self.cookies
             if 'X-XSRF-TOKEN' in r.headers.keys():
                 self.xsrf_token = r.headers['X-XSRF-TOKEN']
-            return r
         else:
             logger.error(f"HTTP Status Code: {r.status_code}")
             for headerkey in [item for item in r.headers.keys() if item.startswith('X-Spa-Error')]:
                 logger.error(f"{headerkey}: {r.headers[headerkey]}")
-            raise
+        return r
 
     def post(self, path, headers={}, data=None, stream=False, files=None) -> Response:
         return self._request(method="POST", path=path, headers=headers, data=data, stream=stream, files=files)
